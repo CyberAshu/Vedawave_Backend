@@ -1,0 +1,6 @@
+venv
+.venv
+venv/bin
+chatbook.db
+chatapp_backend/venv/pyvenv.cfg
+chatapp_backend/venv
