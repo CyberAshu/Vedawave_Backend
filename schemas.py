@@ -62,6 +62,7 @@ class MessageResponse(BaseModel):
     message_type: str
     is_edited: bool = False
     is_deleted: bool = False
+    status: str = "sent"
     reply_to_message_id: Optional[int] = None
     reply_to_message: Optional[Dict[str, Any]] = None
     attachments: List[Dict[str, Any]] = []
@@ -79,6 +80,7 @@ class ChatResponse(BaseModel):
     other_user: UserResponse
     last_message: Optional[MessageResponse] = None
     created_at: datetime
+    unread_count: int
     
     class Config:
         from_attributes = True
