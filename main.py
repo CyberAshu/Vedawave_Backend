@@ -462,12 +462,20 @@ async def get_messages(chat_id: int, current_user: User = Depends(get_current_us
     
     messages = db.query(Message).filter(Message.chat_id == chat_id).order_by(Message.created_at.asc()).all()
     
-    # Mark messages as seen for the current user
+    # Mark messages as seen for the current user and notify senders
+    seen_messages = []
     for message in messages:
         if message.sender_id != current_user.id and message.status != 'seen':
             message.status = 'seen'
             message.seen_at = datetime.utcnow()
-    db.commit()
+            seen_messages.append(message)
+    
+    if seen_messages:
+        db.commit()
+        
+        # Notify message senders that their messages have been seen
+        for message in seen_messages:
+            await manager.update_message_status(message.id, 'seen', message.chat_id, message.sender_id)
     
     message_responses = []
     for message in messages:
@@ -816,6 +824,11 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
                 }
                 
                 await manager.send_to_user(other_user_id, json.dumps(typing_data))
+                
+            elif message_data["type"] == "ping":
+                # Handle ping for heartbeat
+                pong_data = {"type": "pong"}
+                await websocket.send_text(json.dumps(pong_data))
     
     except WebSocketDisconnect:
         manager.disconnect(user_id)
