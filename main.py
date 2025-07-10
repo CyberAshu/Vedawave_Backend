@@ -542,6 +542,41 @@ async def get_messages(chat_id: int, current_user: User = Depends(get_current_us
     
     return message_responses
 
+# New endpoint to mark messages as seen
+@app.post("/api/chats/{chat_id}/messages/mark-seen")
+async def mark_messages_as_seen(chat_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Verify user is part of the chat
+    chat = db.query(Chat).filter(
+        Chat.id == chat_id,
+        ((Chat.user1_id == current_user.id) | (Chat.user2_id == current_user.id))
+    ).first()
+    
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    
+    # Mark all unread messages in this chat as seen
+    unseen_messages = db.query(Message).filter(
+        Message.chat_id == chat_id,
+        Message.sender_id != current_user.id,
+        Message.status != 'seen'
+    ).all()
+    
+    # Update messages to seen
+    for message in unseen_messages:
+        message.status = 'seen'
+        message.seen_at = datetime.utcnow()
+    
+    if unseen_messages:
+        db.commit()
+        
+        # Notify all chat participants about the status updates
+        chat_participants = [chat.user1_id, chat.user2_id]
+        for message in unseen_messages:
+            for participant_id in chat_participants:
+                await manager.update_message_status(message.id, 'seen', message.chat_id, participant_id)
+    
+    return {"message": "Messages marked as seen", "count": len(unseen_messages)}
+
 @app.put("/api/messages/{message_id}", response_model=MessageResponse)
 async def edit_message(message_id: int, message_data: MessageCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Get the message

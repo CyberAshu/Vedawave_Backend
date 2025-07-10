@@ -7,6 +7,8 @@ class ConnectionManager:
     def __init__(self):
         # Store active connections: user_id -> websocket
         self.active_connections: Dict[int, WebSocket] = {}
+        # Track which chat each user is currently viewing: user_id -> chat_id
+        self.user_active_chats: Dict[int, int] = {}
     
     async def update_message_status(self, message_id: int, status: str, chat_id: int, recipient_id: int):
         """Update the message status and notify the recipient."""
