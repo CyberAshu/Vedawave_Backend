@@ -462,7 +462,7 @@ async def get_messages(chat_id: int, current_user: User = Depends(get_current_us
     
     messages = db.query(Message).filter(Message.chat_id == chat_id).order_by(Message.created_at.asc()).all()
     
-    # Mark messages as seen for the current user and notify senders
+    # Mark messages as seen for the current user and notify all participants
     seen_messages = []
     for message in messages:
         if message.sender_id != current_user.id and message.status != 'seen':
@@ -473,9 +473,11 @@ async def get_messages(chat_id: int, current_user: User = Depends(get_current_us
     if seen_messages:
         db.commit()
         
-        # Notify message senders that their messages have been seen
+        # Notify all chat participants about the status updates (sender and receiver)
+        chat_participants = [chat.user1_id, chat.user2_id]
         for message in seen_messages:
-            await manager.update_message_status(message.id, 'seen', message.chat_id, message.sender_id)
+            for participant_id in chat_participants:
+                await manager.update_message_status(message.id, 'seen', message.chat_id, participant_id)
     
     message_responses = []
     for message in messages:
