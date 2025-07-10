@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from datetime import datetime
 from database import Base
 
 class User(Base):
@@ -12,9 +13,9 @@ class User(Base):
     password = Column(String(255), nullable=False)
     avatar = Column(String(500), nullable=True)
     is_active = Column(Boolean, default=False)
-    last_seen = Column(DateTime, default=func.now())
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    last_seen = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     sent_messages = relationship("Message", foreign_keys="Message.sender_id", back_populates="sender")
@@ -33,8 +34,8 @@ class Chat(Base):
     id = Column(Integer, primary_key=True, index=True)
     user1_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user2_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     user1 = relationship("User", foreign_keys=[user1_id], back_populates="chats_as_user1")
@@ -52,8 +53,8 @@ class Message(Base):
     chat_id = Column(Integer, ForeignKey("chats.id"), nullable=False)
     message_type =Column(String(50), default="text")  # text, image, file, audio, video
     reply_to_message_id = Column(Integer, ForeignKey("messages.id"), nullable=True)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     sender = relationship("User", foreign_keys=[sender_id], back_populates="sent_messages")
@@ -72,7 +73,7 @@ class Attachment(Base):
     file_url = Column(String(500), nullable=False)
     file_type = Column(String(100), nullable=False)
     file_size = Column(BigInteger, nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     message = relationship("Message", back_populates="attachments")
@@ -84,8 +85,8 @@ class FriendRequest(Base):
     sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     receiver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     status = Column(String(20), default="pending")  # pending, accepted, rejected
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     sender = relationship("User", foreign_keys=[sender_id], back_populates="sent_friend_requests")
@@ -97,7 +98,7 @@ class Friendship(Base):
     id = Column(Integer, primary_key=True, index=True)
     user1_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user2_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     user1 = relationship("User", foreign_keys=[user1_id], back_populates="friendships_as_user1")
@@ -110,7 +111,7 @@ class MessageReaction(Base):
     message_id = Column(Integer, ForeignKey("messages.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     emoji = Column(String(10), nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     message = relationship("Message", back_populates="reactions")
