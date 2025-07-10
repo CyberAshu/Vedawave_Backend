@@ -796,6 +796,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
                         "chat_id": message.chat_id,
                         "created_at": message.created_at.isoformat(),
                         "message_type": message.message_type,
+                        "status": "sent",  # Initial status
                         "reply_to_message_id": message.reply_to_message_id,
                         "reply_to_message": reply_to_message,
                         "attachments": attachments
@@ -804,13 +805,14 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
                 
                 await manager.send_to_users(participants, json.dumps(response_data))
                 
-                # Update message status to delivered and notify sender
+                # Update message status to delivered and notify all participants (including sender)
                 message.status = "delivered"
                 message.delivered_at = datetime.utcnow()
                 db.commit()
                 
-                # Send delivery status to sender
-                await manager.update_message_status(message.id, "delivered", message.chat_id, user_id)
+                # Send delivery status to all participants so sender sees the update
+                for participant_id in participants:
+                    await manager.update_message_status(message.id, "delivered", message.chat_id, participant_id)
                 
             elif message_data["type"] == "typing":
                 # Handle typing indicator
