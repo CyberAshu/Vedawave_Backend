@@ -464,7 +464,13 @@ async def get_friends(current_user: User = Depends(get_current_user), db: Sessio
 
 # Message routes
 @app.get("/api/chats/{chat_id}/messages", response_model=List[MessageResponse])
-async def get_messages(chat_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_messages(
+    chat_id: int, 
+    limit: int = 10, 
+    offset: int = 0,
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
     # Verify user is part of the chat
     chat = db.query(Chat).filter(
         Chat.id == chat_id,
@@ -474,7 +480,13 @@ async def get_messages(chat_id: int, current_user: User = Depends(get_current_us
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
     
-    messages = db.query(Message).filter(Message.chat_id == chat_id).order_by(Message.created_at.asc()).all()
+    # Get messages with pagination - latest first, then reverse for chronological order
+    messages = db.query(Message).filter(
+        Message.chat_id == chat_id
+    ).order_by(Message.created_at.desc()).offset(offset).limit(limit).all()
+    
+    # Reverse to get chronological order (oldest first)
+    messages.reverse()
     
     # Mark messages as seen for the current user and notify all participants
     seen_messages = []
