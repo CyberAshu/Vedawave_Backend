@@ -221,6 +221,13 @@ async def get_chats(current_user: User = Depends(get_current_user), db: Session 
         
         last_message = db.query(Message).filter(Message.chat_id == chat.id).order_by(Message.created_at.desc()).first()
         
+        # Calculate unread message count
+        unread_count = db.query(Message).filter(
+            Message.chat_id == chat.id,
+            Message.sender_id != current_user.id,
+            Message.status != 'seen'
+        ).count()
+
         chat_responses.append(ChatResponse(
             id=chat.id,
             other_user=UserResponse(
@@ -240,7 +247,8 @@ async def get_chats(current_user: User = Depends(get_current_user), db: Session 
                 is_deleted=last_message.is_deleted,
                 attachments=[]
             ) if last_message else None,
-            created_at=chat.created_at
+            created_at=chat.created_at,
+            unread_count=unread_count
         ))
     
     return sorted(chat_responses, key=lambda x: x.last_message.created_at if x.last_message else x.created_at, reverse=True)
@@ -453,6 +461,13 @@ async def get_messages(chat_id: int, current_user: User = Depends(get_current_us
         raise HTTPException(status_code=404, detail="Chat not found")
     
     messages = db.query(Message).filter(Message.chat_id == chat_id).order_by(Message.created_at.asc()).all()
+    
+    # Mark messages as seen for the current user
+    for message in messages:
+        if message.sender_id != current_user.id and message.status != 'seen':
+            message.status = 'seen'
+            message.seen_at = datetime.utcnow()
+    db.commit()
     
     message_responses = []
     for message in messages:
