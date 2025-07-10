@@ -53,6 +53,9 @@ class Message(Base):
     chat_id = Column(Integer, ForeignKey("chats.id"), nullable=False)
     message_type =Column(String(50), default="text")  # text, image, file, audio, video
     reply_to_message_id = Column(Integer, ForeignKey("messages.id"), nullable=True)
+    status = Column(String(20), default="sent")  # sent, delivered, seen
+    delivered_at = Column(DateTime, nullable=True)
+    seen_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

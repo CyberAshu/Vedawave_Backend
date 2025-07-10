@@ -7,7 +7,18 @@ class ConnectionManager:
     def __init__(self):
         # Store active connections: user_id -> websocket
         self.active_connections: Dict[int, WebSocket] = {}
+    
+    async def update_message_status(self, message_id: int, status: str, chat_id: int, recipient_id: int):
+        """Update the message status and notify the recipient."""
+        status_data = {
+            "type": "message_status",
+            "message_id": message_id,
+            "status": status,
+            "chat_id": chat_id
+        }
         
+        await self.send_to_user(recipient_id, json.dumps(status_data))
+    
     async def connect(self, websocket: WebSocket, user_id: int):
         """Accept a new WebSocket connection."""
         await websocket.accept()
