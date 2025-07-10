@@ -777,6 +777,13 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
                 
                 await manager.send_to_users(participants, json.dumps(response_data))
                 
+                # Send delivery status
+                for participant_id in participants:
+                    if participant_id != user_id:
+                        await manager.update_message_status(message.id, "delivered", message.chat_id, participant_id)
+                        message.delivered_at = datetime.utcnow()
+                db.commit()
+                
             elif message_data["type"] == "typing":
                 # Handle typing indicator
                 chat = db.query(Chat).filter(Chat.id == message_data["chat_id"]).first()

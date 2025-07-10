@@ -1,8 +1,18 @@
+# Python virtual environments
 venv
 .venv
 venv/bin
-chatbook.db
-chatapp_backend/venv/pyvenv.cfg
 chatapp_backend/venv
+chatapp_backend/venv/pyvenv.cfg
+
+# Databases
+chatbook.db
+chatapp.db
+
+# Python cache
 __pycache__/
 *.pyc
+
+# Uploads (optional, if auto-generated)
+uploads/
+
