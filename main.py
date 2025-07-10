@@ -755,14 +755,32 @@ async def delete_chat(chat_id: int, current_user: User = Depends(get_current_use
     
     return {"message": "Chat deleted successfully"}
 
+class BulkDeleteRequest(BaseModel):
+    chat_ids: List[int]
+
+# Debug endpoint to test request format
+@app.post("/api/debug/bulk-delete")
+async def debug_bulk_delete(
+    request: BulkDeleteRequest,
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    print(f"DEBUG: Received request: {request}")
+    print(f"DEBUG: Chat IDs: {request.chat_ids}")
+    return {"received_chat_ids": request.chat_ids, "count": len(request.chat_ids)}
+
 @app.delete("/api/chats/bulk")
 async def delete_multiple_chats(
-    chat_ids: List[int],
+    request: BulkDeleteRequest,
     current_user: User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
     """Delete multiple chats at once"""
+    print(f"DEBUG: Received request: {request}")
+    print(f"DEBUG: Chat IDs: {request.chat_ids}")
+    
     deleted_count = 0
+    chat_ids = request.chat_ids
     
     for chat_id in chat_ids:
         # Get the chat
