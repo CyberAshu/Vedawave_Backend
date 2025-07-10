@@ -85,7 +85,9 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
         name=user.name,
         email=user.email,
         avatar=user.avatar,
+        status_message=user.status_message,
         is_active=user.is_active,
+        created_at=user.created_at,
         access_token=access_token
     )
 
@@ -108,7 +110,9 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         name=user.name,
         email=user.email,
         avatar=user.avatar,
+        status_message=user.status_message,
         is_active=user.is_active,
+        created_at=user.created_at,
         access_token=access_token
     )
 
@@ -128,7 +132,9 @@ async def get_users(current_user: User = Depends(get_current_user), db: Session 
         name=user.name,
         email=user.email,
         avatar=user.avatar,
-        is_active=user.is_active
+        status_message=user.status_message,
+        is_active=user.is_active,
+        created_at=user.created_at
     ) for user in users]
 
 @app.get("/api/users/me", response_model=UserResponse)
@@ -138,7 +144,9 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         name=current_user.name,
         email=current_user.email,
         avatar=current_user.avatar,
-        is_active=current_user.is_active
+        status_message=current_user.status_message,
+        is_active=current_user.is_active,
+        created_at=current_user.created_at
     )
 
 @app.put("/api/users/me", response_model=UserResponse)
@@ -154,6 +162,8 @@ async def update_current_user(user_data: UserUpdate, current_user: User = Depend
         current_user.email = user_data.email
     if user_data.avatar:
         current_user.avatar = user_data.avatar
+    if user_data.status_message is not None:  # Allow empty string to clear status
+        current_user.status_message = user_data.status_message
     
     db.commit()
     db.refresh(current_user)
@@ -163,7 +173,9 @@ async def update_current_user(user_data: UserUpdate, current_user: User = Depend
         name=current_user.name,
         email=current_user.email,
         avatar=current_user.avatar,
-        is_active=current_user.is_active
+        status_message=current_user.status_message,
+        is_active=current_user.is_active,
+        created_at=current_user.created_at
     )
 
 @app.get("/api/users/search", response_model=List[UserResponse])
@@ -204,7 +216,9 @@ async def search_users(q: str = "", current_user: User = Depends(get_current_use
         name=user.name,
         email=user.email,
         avatar=user.avatar,
-        is_active=user.is_active
+        status_message=user.status_message,
+        is_active=user.is_active,
+        created_at=user.created_at
     ) for user in users]
 
 # Chat routes

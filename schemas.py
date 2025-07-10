@@ -15,6 +15,7 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     avatar: Optional[str] = None
+    status_message: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -23,8 +24,10 @@ class UserLogin(BaseModel):
 class UserResponse(UserBase):
     id: int
     avatar: Optional[str] = None
+    status_message: Optional[str] = None
     is_active: bool
     last_seen: Optional[datetime] = None
+    created_at: Optional[datetime] = None
     access_token: Optional[str] = None
     
     class Config:

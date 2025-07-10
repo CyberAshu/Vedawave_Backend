@@ -12,6 +12,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     password = Column(String(255), nullable=False)
     avatar = Column(String(500), nullable=True)
+    status_message = Column(String(200), nullable=True)  # Custom status message
     is_active = Column(Boolean, default=False)
     last_seen = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
