@@ -480,13 +480,13 @@ async def get_messages(
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
     
-    # Get messages with pagination - latest first, then reverse for chronological order
+    # Get messages with pagination - latest first for proper infinite scroll
     messages = db.query(Message).filter(
         Message.chat_id == chat_id
     ).order_by(Message.created_at.desc()).offset(offset).limit(limit).all()
     
-    # Reverse to get chronological order (oldest first)
-    messages.reverse()
+    # Keep in descending order (newest first) for proper infinite scroll
+    # Frontend will display them in reverse order
     
     # Mark messages as seen for the current user and notify all participants
     seen_messages = []
