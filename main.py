@@ -721,6 +721,84 @@ async def add_reaction(
     
     return {"message": f"Reaction {action} successfully", "action": action, "reactions": formatted_reactions}
 
+@app.delete("/api/chats/{chat_id}")
+async def delete_chat(chat_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Get the chat
+    chat = db.query(Chat).filter(Chat.id == chat_id).first()
+    
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    
+    # Check if user is part of the chat
+    if chat.user1_id != current_user.id and chat.user2_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only delete your own chats")
+    
+    # Delete all messages and attachments associated with this chat
+    messages = db.query(Message).filter(Message.chat_id == chat_id).all()
+    for message in messages:
+        # Delete attachments first
+        attachments = db.query(Attachment).filter(Attachment.message_id == message.id).all()
+        for attachment in attachments:
+            db.delete(attachment)
+        
+        # Delete reactions
+        reactions = db.query(MessageReaction).filter(MessageReaction.message_id == message.id).all()
+        for reaction in reactions:
+            db.delete(reaction)
+        
+        # Delete the message
+        db.delete(message)
+    
+    # Delete the chat
+    db.delete(chat)
+    db.commit()
+    
+    return {"message": "Chat deleted successfully"}
+
+@app.delete("/api/chats/bulk")
+async def delete_multiple_chats(
+    chat_ids: List[int],
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    """Delete multiple chats at once"""
+    deleted_count = 0
+    
+    for chat_id in chat_ids:
+        # Get the chat
+        chat = db.query(Chat).filter(Chat.id == chat_id).first()
+        
+        if not chat:
+            continue  # Skip if chat not found
+        
+        # Check if user is part of the chat
+        if chat.user1_id != current_user.id and chat.user2_id != current_user.id:
+            continue  # Skip if user is not part of the chat
+        
+        # Delete all messages and attachments associated with this chat
+        messages = db.query(Message).filter(Message.chat_id == chat_id).all()
+        for message in messages:
+            # Delete attachments first
+            attachments = db.query(Attachment).filter(Attachment.message_id == message.id).all()
+            for attachment in attachments:
+                db.delete(attachment)
+            
+            # Delete reactions
+            reactions = db.query(MessageReaction).filter(MessageReaction.message_id == message.id).all()
+            for reaction in reactions:
+                db.delete(reaction)
+            
+            # Delete the message
+            db.delete(message)
+        
+        # Delete the chat
+        db.delete(chat)
+        deleted_count += 1
+    
+    db.commit()
+    
+    return {"message": f"Successfully deleted {deleted_count} chat(s)"}
+
 @app.delete("/api/messages/{message_id}")
 async def delete_message(message_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Get the message
