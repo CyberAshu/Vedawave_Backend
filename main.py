@@ -506,25 +506,28 @@ async def get_messages(chat_id: int, current_user: User = Depends(get_current_us
                 "users": user_ids
             })
         
-            message_responses.append(MessageResponse(
-                id=message.id,
-                content=message.content,
-                sender_id=message.sender_id,
-                created_at=message.created_at,
-                message_type=message.message_type,
-                is_edited=message.is_edited,
-                is_deleted=message.is_deleted,
-                status=message.status,
-                reply_to_message_id=message.reply_to_message_id,
-                reply_to_message=reply_to_message,
-                attachments=formatted_attachments,
-                reactions=formatted_reactions
-            ))
-                "filename": att.filename,
-                "file_url": att.file_url,
-                "file_type": att.file_type,
-                "file_size": att.file_size
-            } for att in attachments]
+        # Format attachments
+        formatted_attachments = [{
+            "id": att.id,
+            "filename": att.filename,
+            "file_url": att.file_url,
+            "file_type": att.file_type,
+            "file_size": att.file_size
+        } for att in attachments]
+        
+        message_responses.append(MessageResponse(
+            id=message.id,
+            content=message.content,
+            sender_id=message.sender_id,
+            created_at=message.created_at,
+            message_type=message.message_type,
+            is_edited=message.is_edited,
+            is_deleted=message.is_deleted,
+            status=message.status,
+            reply_to_message_id=message.reply_to_message_id,
+            reply_to_message=reply_to_message,
+            attachments=formatted_attachments,
+            reactions=formatted_reactions
         ))
     
     return message_responses
